@@ -46,10 +46,7 @@ class ThemeEditFragment extends StatelessWidget {
                   Expanded(
                     child: Text(
                       "跟随系统",
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        height: 1.25,
-                      ),
+                      style: textStyle16,
                     ),
                   ),
                   Switch(
@@ -76,10 +73,7 @@ class ThemeEditFragment extends StatelessWidget {
                     Expanded(
                       child: Text(
                         "暗色模式",
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          height: 1.25,
-                        ),
+                        style: textStyle16,
                       ),
                     ),
                     Switch(
@@ -104,19 +98,14 @@ class ThemeEditFragment extends StatelessWidget {
                   },
                 );
               },
-              padding: EdgeInsets.symmetric(
-                horizontal: 16.0,
-              ),
+              padding: edgeH16,
               height: 56.0,
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       "主色调",
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        height: 1.25,
-                      ),
+                      style: textStyle16,
                     ),
                   ),
                   Container(
@@ -147,19 +136,14 @@ class ThemeEditFragment extends StatelessWidget {
                   },
                 );
               },
-              padding: EdgeInsets.symmetric(
-                horizontal: 16.0,
-              ),
+              padding: edgeH16,
               height: 56.0,
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       "强调色",
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        height: 1.25,
-                      ),
+                      style: textStyle16,
                     ),
                   ),
                   Container(
@@ -191,19 +175,14 @@ class ThemeEditFragment extends StatelessWidget {
                     },
                   );
                 },
-                padding: EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                ),
+                padding: edgeH16,
                 height: 56.0,
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         "背景色",
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          height: 1.25,
-                        ),
+                        style: textStyle16,
                       ),
                     ),
                     Container(
@@ -235,19 +214,14 @@ class ThemeEditFragment extends StatelessWidget {
                     },
                   );
                 },
-                padding: EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                ),
+                padding: edgeH16,
                 height: 56.0,
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         "前景色",
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          height: 1.25,
-                        ),
+                        style: textStyle16,
                       ),
                     ),
                     Container(
@@ -279,19 +253,14 @@ class ThemeEditFragment extends StatelessWidget {
                     },
                   );
                 },
-                padding: EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                ),
+                padding: edgeH16,
                 height: 56.0,
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         "背景色 暗色",
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          height: 1.25,
-                        ),
+                        style: textStyle16,
                       ),
                     ),
                     Container(
@@ -323,19 +292,14 @@ class ThemeEditFragment extends StatelessWidget {
                     },
                   );
                 },
-                padding: EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                ),
+                padding: edgeH16,
                 height: 56.0,
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         "前景色 暗色",
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          height: 1.25,
-                        ),
+                        style: textStyle16,
                       ),
                     ),
                     Container(
@@ -373,10 +337,10 @@ class ThemeEditFragment extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          titlePadding: const EdgeInsets.all(0.0),
-          contentPadding: const EdgeInsets.all(0.0),
+          titlePadding: EdgeInsets.zero,
+          contentPadding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: borderRadius16,
           ),
           content: SingleChildScrollView(
             // child: ColorPicker(
@@ -402,7 +366,7 @@ class ThemeEditFragment extends StatelessWidget {
               showLabel: false,
               showIndicator: true,
               indicatorBorderRadius: const BorderRadius.vertical(
-                top: const Radius.circular(16.0),
+                top: radius16,
               ),
             ),
           ),
@@ -435,11 +399,7 @@ class ThemeEditFragment extends StatelessWidget {
           Expanded(
             child: Text(
               "编辑主题",
-              style: TextStyle(
-                fontSize: 20,
-                height: 1.25,
-                fontWeight: FontWeight.bold,
-              ),
+              style: textStyle20B,
             ),
           ),
           MaterialButton(
@@ -449,14 +409,13 @@ class ThemeEditFragment extends StatelessWidget {
               });
             },
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            padding: EdgeInsets.all(8.0),
             child: Icon(
               FluentIcons.save_24_regular,
               size: 16.0,
             ),
-            minWidth: 0,
+            minWidth: 36.0,
             color: theme.scaffoldBackgroundColor,
-            shape: CircleBorder(),
+            shape: circleShape,
           ),
         ],
       ),

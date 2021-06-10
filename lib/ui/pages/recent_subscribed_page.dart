@@ -1,5 +1,6 @@
 import 'package:extended_sliver/extended_sliver.dart';
 import 'package:ff_annotation_route_core/ff_annotation_route_core.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 @FFArgumentImport()
@@ -36,7 +37,7 @@ class RecentSubscribedPage extends StatelessWidget {
       child: ChangeNotifierProvider(
         create: (_) => RecentSubscribedModel(this.loaded),
         child: Builder(builder: (context) {
-          final RecentSubscribedModel model =
+          final model =
               Provider.of<RecentSubscribedModel>(context, listen: false);
           return Scaffold(
             body: NotificationListener(
@@ -58,7 +59,7 @@ class RecentSubscribedPage extends StatelessWidget {
                   color: theme.accentColor.computeLuminance() < 0.5
                       ? Colors.white
                       : Colors.black,
-                  distance: Sz.statusBarHeight + 42.0,
+                  distance: Screen.statusBarHeight + 42.0,
                 ),
                 footer: Indicator.footer(
                   context,
@@ -68,11 +69,11 @@ class RecentSubscribedPage extends StatelessWidget {
                 enablePullDown: true,
                 enablePullUp: true,
                 onRefresh: model.refresh,
-                onLoading: model.loadMoreRecentRecords,
+                onLoading: model.loadMore,
                 child: CustomScrollView(
                   slivers: [
                     _buildHeader(theme),
-                    _buildRecordsList(theme),
+                    _buildList(theme),
                   ],
                 ),
               ),
@@ -83,7 +84,7 @@ class RecentSubscribedPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordsList(final ThemeData theme) {
+  Widget _buildList(final ThemeData theme) {
     return SliverPadding(
       padding: edgeH16V8,
       sliver: Selector<RecentSubscribedModel, List<RecordItem>>(
@@ -91,11 +92,11 @@ class RecentSubscribedPage extends StatelessWidget {
         shouldRebuild: (pre, next) => pre.ne(next),
         builder: (_, records, __) {
           return SliverGrid(
-            gridDelegate: SliverGridDelegateWithMinCrossAxisExtent(
+            gridDelegate: const SliverGridDelegateWithMinCrossAxisExtent(
               minCrossAxisExtent: 360.0,
               crossAxisSpacing: 12.0,
               mainAxisSpacing: 12.0,
-              mainAxisExtent: 176,
+              mainAxisExtent: 180.0,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) {
@@ -126,7 +127,7 @@ class RecentSubscribedPage extends StatelessWidget {
       child: Selector<RecentSubscribedModel, bool>(
         selector: (_, model) => model.hasScrolled,
         shouldRebuild: (pre, next) => pre != next,
-        builder: (_, hasScrolled, __) {
+        builder: (context, hasScrolled, __) {
           return AnimatedContainer(
             decoration: BoxDecoration(
               color: hasScrolled
@@ -135,16 +136,30 @@ class RecentSubscribedPage extends StatelessWidget {
               borderRadius: scrollHeaderBorderRadius(hasScrolled),
               boxShadow: scrollHeaderBoxShadow(hasScrolled),
             ),
-            padding: edge16Header(),
+            padding: edge16WithStatusBar,
             duration: dur240,
             child: Row(
               children: <Widget>[
-                Text(
-                  "订阅更新",
-                  style: TextStyle(
-                    fontSize: 24,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
+                MaterialButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Icon(
+                    FluentIcons.chevron_left_24_regular,
+                    size: 16.0,
+                  ),
+                  minWidth: 36.0,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: circleShape,
+                  color: hasScrolled
+                      ? theme.scaffoldBackgroundColor
+                      : theme.backgroundColor,
+                ),
+                sizedBoxW12,
+                Expanded(
+                  child: Text(
+                    "订阅更新",
+                    style: textStyle24B,
                   ),
                 ),
               ],

@@ -1,13 +1,14 @@
 import 'package:extended_sliver/extended_sliver.dart';
 import 'package:ff_annotation_route_core/ff_annotation_route_core.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mikan_flutter/internal/extension.dart';
 import 'package:mikan_flutter/internal/screen.dart';
 import 'package:mikan_flutter/model/bangumi_row.dart';
 import 'package:mikan_flutter/model/season.dart';
+import 'package:mikan_flutter/providers/op_model.dart';
 import 'package:mikan_flutter/providers/season_model.dart';
-import 'package:mikan_flutter/providers/subscribed_model.dart';
 import 'package:mikan_flutter/topvars.dart';
 import 'package:mikan_flutter/ui/fragments/bangumi_sliver_grid_fragment.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
@@ -34,8 +35,7 @@ class SingleSeasonPage extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => SeasonModel(this.season),
       child: Builder(builder: (context) {
-        final SeasonModel seasonModel =
-            Provider.of<SeasonModel>(context, listen: false);
+        final seasonModel = Provider.of<SeasonModel>(context, listen: false);
         return Scaffold(
           body: NotificationListener(
             onNotification: (notification) {
@@ -62,7 +62,7 @@ class SingleSeasonPage extends StatelessWidget {
                     color: theme.accentColor.computeLuminance() < 0.5
                         ? Colors.white
                         : Colors.black,
-                    distance: Sz.statusBarHeight + 42.0,
+                    distance: Screen.statusBarHeight + 42.0,
                   ),
                   onRefresh: seasonModel.refresh,
                   child: CustomScrollView(
@@ -76,23 +76,17 @@ class SingleSeasonPage extends StatelessWidget {
                           children: [
                             _buildWeekSection(theme, bangumiRow),
                             BangumiSliverGridFragment(
-                              padding: bangumiRows.length - 1 == index
-                                  ? EdgeInsets.only(
-                                      left: 16.0,
-                                      right: 16.0,
-                                      top: 16.0,
-                                      bottom: 16.0,
-                                    )
-                                  : EdgeInsets.all(16.0),
+                              padding: edge16,
                               bangumis: bangumiRow.bangumis,
                               handleSubscribe: (bangumi, flag) {
-                                context
-                                    .read<SubscribedModel>()
-                                    .subscribeBangumi(
+                                context.read<OpModel>().subscribeBangumi(
                                   bangumi.id,
                                   bangumi.subscribed,
                                   onSuccess: () {
                                     bangumi.subscribed = !bangumi.subscribed;
+                                    context
+                                        .read<OpModel>()
+                                        .subscribeChanged(flag);
                                   },
                                   onError: (msg) {
                                     "订阅失败：$msg".toast();
@@ -128,15 +122,31 @@ class SingleSeasonPage extends StatelessWidget {
               borderRadius: scrollHeaderBorderRadius(hasScrolled),
               boxShadow: scrollHeaderBoxShadow(hasScrolled),
             ),
-            padding: edge16Header(),
+            padding: edge16WithStatusBar,
             duration: dur240,
-            child: Text(
-              this.season.title,
-              style: TextStyle(
-                fontSize: 24,
-                height: 1.25,
-                fontWeight: FontWeight.bold,
-              ),
+            child: Row(
+              children: [
+                MaterialButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Icon(
+                    FluentIcons.chevron_left_24_regular,
+                    size: 16.0,
+                  ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minWidth: 36.0,
+                  shape: circleShape,
+                  color: hasScrolled
+                      ? theme.scaffoldBackgroundColor
+                      : theme.backgroundColor,
+                ),
+                sizedBoxW12,
+                Text(
+                  this.season.title,
+                  style: textStyle24B,
+                ),
+              ],
             ),
           ),
         );
@@ -164,33 +174,36 @@ class SingleSeasonPage extends StatelessWidget {
     ].join("，");
 
     return SliverPinnedToBoxAdapter(
-      child: Container(
-        padding: edgeH16V8,
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                bangumiRow.name,
-                style: textStyle20B,
-              ),
-            ),
-            Tooltip(
-              message: full,
-              child: Text(
-                simple,
-                style: TextStyle(
-                  color: theme.textTheme.subtitle1?.color,
-                  fontSize: 12.0,
-                  height: 1.25,
+      child: Transform.translate(
+        offset: offsetY_1,
+        child: Container(
+          padding: edgeH16V8,
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  bangumiRow.name,
+                  style: textStyle20B,
                 ),
               ),
-            ),
-          ],
+              Tooltip(
+                message: full,
+                child: Text(
+                  simple,
+                  style: TextStyle(
+                    color: theme.textTheme.subtitle1?.color,
+                    fontSize: 14.0,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

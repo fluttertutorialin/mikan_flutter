@@ -1,5 +1,6 @@
 import 'package:extended_sliver/extended_sliver.dart';
 import 'package:ff_annotation_route_core/ff_annotation_route_core.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +9,8 @@ import 'package:mikan_flutter/internal/screen.dart';
 import 'package:mikan_flutter/model/bangumi_row.dart';
 import 'package:mikan_flutter/model/season_bangumi_rows.dart';
 import 'package:mikan_flutter/model/year_season.dart';
+import 'package:mikan_flutter/providers/op_model.dart';
 import 'package:mikan_flutter/providers/season_list_model.dart';
-import 'package:mikan_flutter/providers/subscribed_model.dart';
 import 'package:mikan_flutter/topvars.dart';
 import 'package:mikan_flutter/ui/fragments/bangumi_sliver_grid_fragment.dart';
 import 'package:mikan_flutter/widget/refresh_indicator.dart';
@@ -40,7 +41,7 @@ class SeasonListPage extends StatelessWidget {
       child: ChangeNotifierProvider(
         create: (_) => SeasonListModel(this.years),
         child: Builder(builder: (context) {
-          final SeasonListModel seasonListModel =
+          final seasonListModel =
               Provider.of<SeasonListModel>(context, listen: false);
           return Scaffold(
             body: NotificationListener(
@@ -66,7 +67,7 @@ class SeasonListPage extends StatelessWidget {
                       color: theme.accentColor.computeLuminance() < 0.5
                           ? Colors.white
                           : Colors.black,
-                      distance: Sz.statusBarHeight + 42.0,
+                      distance: Screen.statusBarHeight + 42.0,
                     ),
                     footer: Indicator.footer(
                       context,
@@ -113,21 +114,15 @@ class SeasonListPage extends StatelessWidget {
                       _buildBangumiRowSection(theme, bangumiRow),
                       BangumiSliverGridFragment(
                         flag: seasonTitle,
-                        padding: seasonBangumis.bangumiRows.length - 1 == index
-                            ? EdgeInsets.only(
-                                left: 16.0,
-                                right: 16.0,
-                                top: 16.0,
-                                bottom: 16.0,
-                              )
-                            : EdgeInsets.all(16.0),
+                        padding: edge16,
                         bangumis: bangumiRow.bangumis,
                         handleSubscribe: (bangumi, flag) {
-                          context.read<SubscribedModel>().subscribeBangumi(
+                          context.read<OpModel>().subscribeBangumi(
                             bangumi.id,
                             bangumi.subscribed,
                             onSuccess: () {
                               bangumi.subscribed = !bangumi.subscribed;
+                              context.read<OpModel>().subscribeChanged(flag);
                             },
                             onError: (msg) {
                               "订阅失败：$msg".toast();
@@ -148,15 +143,18 @@ class SeasonListPage extends StatelessWidget {
 
   Widget _buildSeasonSection(final ThemeData theme, final String seasonTitle) {
     return SliverPinnedToBoxAdapter(
-      child: Container(
-        color: theme.scaffoldBackgroundColor,
-        padding: edgeH16T8,
-        child: Text(
-          seasonTitle,
-          style: TextStyle(
-            fontSize: 20,
-            height: 1.25,
-            fontWeight: FontWeight.bold,
+      child: Transform.translate(
+        offset: offsetY_1,
+        child: Container(
+          color: theme.scaffoldBackgroundColor,
+          padding: edgeH16T8,
+          child: Text(
+            seasonTitle,
+            style: TextStyle(
+              fontSize: 20,
+              height: 1.25,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
@@ -183,7 +181,7 @@ class SeasonListPage extends StatelessWidget {
     ].join("，");
     return SliverPinnedToBoxAdapter(
       child: Transform.translate(
-        offset: Offset(0, -2),
+        offset: offsetY_2,
         child: Container(
           color: theme.scaffoldBackgroundColor,
           padding: edgeH16V8,
@@ -194,11 +192,7 @@ class SeasonListPage extends StatelessWidget {
               Expanded(
                 child: Text(
                   bangumiRow.name,
-                  style: TextStyle(
-                    fontSize: 18,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: textStyle18B,
                 ),
               ),
               Tooltip(
@@ -207,7 +201,7 @@ class SeasonListPage extends StatelessWidget {
                   simple,
                   style: TextStyle(
                     color: theme.textTheme.subtitle1?.color,
-                    fontSize: 12.0,
+                    fontSize: 14.0,
                     height: 1.25,
                   ),
                 ),
@@ -223,7 +217,7 @@ class SeasonListPage extends StatelessWidget {
     return Selector<SeasonListModel, bool>(
       selector: (_, model) => model.hasScrolled,
       shouldRebuild: (pre, next) => pre != next,
-      builder: (_, hasScrolled, __) {
+      builder: (context, hasScrolled, __) {
         return SliverPinnedToBoxAdapter(
           child: AnimatedContainer(
             decoration: BoxDecoration(
@@ -233,16 +227,30 @@ class SeasonListPage extends StatelessWidget {
               borderRadius: scrollHeaderBorderRadius(hasScrolled),
               boxShadow: scrollHeaderBoxShadow(hasScrolled),
             ),
-            padding: edge16Header(),
+            padding: edge16WithStatusBar,
             duration: dur240,
             child: Row(
               children: <Widget>[
-                Text(
-                  "季度番组",
-                  style: TextStyle(
-                    fontSize: 24,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
+                MaterialButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Icon(
+                    FluentIcons.chevron_left_24_regular,
+                    size: 16.0,
+                  ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minWidth: 36.0,
+                  shape: circleShape,
+                  color: hasScrolled
+                      ? theme.scaffoldBackgroundColor
+                      : theme.backgroundColor,
+                ),
+                sizedBoxW12,
+                Expanded(
+                  child: Text(
+                    "季度番组",
+                    style: textStyle24B,
                   ),
                 ),
               ],

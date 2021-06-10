@@ -2,6 +2,7 @@ import 'package:extended_sliver/extended_sliver.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mikan_flutter/internal/delegate.dart';
 import 'package:mikan_flutter/internal/extension.dart';
 import 'package:mikan_flutter/mikan_flutter_routes.dart';
 import 'package:mikan_flutter/model/season.dart';
@@ -16,8 +17,7 @@ class SelectSeasonFragment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final IndexModel indexModel =
-        Provider.of<IndexModel>(context, listen: false);
+    final indexModel = Provider.of<IndexModel>(context, listen: false);
     return Material(
       color: theme.scaffoldBackgroundColor,
       child: NotificationListener(
@@ -56,27 +56,15 @@ class SelectSeasonFragment extends StatelessWidget {
               spreadRadius: 3.0,
             ),
           ],
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(16.0),
-            bottomRight: Radius.circular(16.0),
-          ),
+          borderRadius: borderRadiusB16,
         ),
-        padding: EdgeInsets.only(
-          top: 16.0,
-          left: 16.0,
-          right: 16.0,
-          bottom: 16.0,
-        ),
+        padding: edge16,
         child: Row(
           children: <Widget>[
             Expanded(
               child: Text(
                 "年度番组",
-                style: TextStyle(
-                  fontSize: 20,
-                  height: 1.25,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: textStyle20B,
               ),
             ),
             MaterialButton(
@@ -84,20 +72,18 @@ class SelectSeasonFragment extends StatelessWidget {
                 Navigator.pushNamed(
                   context,
                   Routes.seasonList.name,
-                  arguments: Routes.seasonList.d(
-                    years: indexModel.years,
-                  ),
+                  arguments: Routes.seasonList.d(years: indexModel.years),
                 );
               },
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: EdgeInsets.all(8.0),
               child: Icon(
                 FluentIcons.chevron_right_24_regular,
                 size: 16.0,
               ),
-              minWidth: 0,
+              minWidth: 36.0,
+              padding: EdgeInsets.zero,
               color: theme.scaffoldBackgroundColor,
-              shape: CircleBorder(),
+              shape: circleShape,
             ),
           ],
         ),
@@ -114,7 +100,7 @@ class SelectSeasonFragment extends StatelessWidget {
       child: FractionallySizedBox(
         widthFactor: 1,
         child: Padding(
-          padding: edge8,
+          padding: edgeH4,
           child: Selector<IndexModel, Season?>(
             selector: (_, model) => model.selectedSeason,
             shouldRebuild: (pre, next) => pre != next,
@@ -127,9 +113,9 @@ class SelectSeasonFragment extends StatelessWidget {
                 child: MaterialButton(
                   minWidth: 0,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: EdgeInsets.all(0.0),
+                  padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
+                    borderRadius: borderRadius10,
                   ),
                   child: Text(
                     season.season,
@@ -164,21 +150,20 @@ class SelectSeasonFragment extends StatelessWidget {
         selector: (_, model) => model.years,
         shouldRebuild: (pre, next) => pre.ne(next),
         builder: (_, years, __) {
-          if (years.isNullOrEmpty) return sliverToBoxAdapter;
-          return SliverList(
+          if (years.isNullOrEmpty) return emptySliverToBoxAdapter;
+          return SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final YearSeason year = years[index];
                 return Row(
                   mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Flexible(
-                      child: FractionallySizedBox(
-                        widthFactor: 1,
-                        child: Text(
-                          year.year,
-                          style: textStyle20B,
-                        ),
+                    SizedBox(
+                      width: 56.0,
+                      child: Text(
+                        year.year,
+                        style: textStyle20B,
                       ),
                     ),
                     ...List.generate(
@@ -201,6 +186,12 @@ class SelectSeasonFragment extends StatelessWidget {
                 );
               },
               childCount: years.length,
+            ),
+            gridDelegate: const SliverGridDelegateWithMinCrossAxisExtent(
+              minCrossAxisExtent: 400.0,
+              crossAxisSpacing: 16.0,
+              mainAxisSpacing: 8.0,
+              mainAxisExtent: 40.0,
             ),
           );
         },

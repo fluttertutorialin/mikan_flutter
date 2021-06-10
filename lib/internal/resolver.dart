@@ -343,10 +343,26 @@ class Resolver {
         keywords.forEach((key, value) {
           if (tempLowerCase.contains(key)) {
             tags.add(value);
+            // temp = temp.replaceAll(
+            //   RegExp(
+            //     key,
+            //     caseSensitive: false,
+            //     multiLine: true,
+            //   ),
+            //   "",
+            // );
           }
         });
         record.tags = tags.toList()..sort((a, b) => b.compareTo(a));
         record.title = temp;
+        // record.title = temp.replaceAll(
+        //   RegExp(
+        //     r"\[[\s\[\]-_]*\]",
+        //     caseSensitive: false,
+        //     multiLine: true,
+        //   ),
+        //   "",
+        // );
       }
       record.url =
           MikanUrl.BASE_URL + (tempElement.attributes['href']?.trim() ?? "");
@@ -444,7 +460,7 @@ class Resolver {
       subgroupGallery.title =
           "${ele.querySelector(".pubgroup-date")?.text.trim()} "
           "${ele.querySelector(".pubgroup-season")?.text.trim()}";
-      subgroupGallery.isCurrentSeason =
+      subgroupGallery.active =
           ele.querySelector(".pubgroup-season.current-season") != null;
       elements = ele.querySelectorAll("li[data-bangumiid]");
       bangumis = [];
@@ -517,7 +533,7 @@ class Resolver {
     if (_intro.isNotBlank) {
       _intro = "\u3000\u3000" + _intro!.replaceAll("\n", "\n\u3000\u3000");
     }
-    detail.intro = _intro;
+    detail.intro = _intro ?? "";
     detail.subscribed = document
             .querySelector(".subscribed-badge")
             ?.attributes["style"]
@@ -535,7 +551,7 @@ class Resolver {
     final List<Element> tables = document
         .querySelectorAll("#sk-container > div.central-container > table");
     final List<Element> subs = document.querySelectorAll(".subgroup-text");
-    detail.subgroupBangumis = [];
+    detail.subgroupBangumis = {};
     SubgroupBangumi subgroupBangumi;
     Element? element;
     List<Element> elements;
@@ -625,7 +641,7 @@ class Resolver {
           records.add(record);
         }
         subgroupBangumi.records = records;
-        detail.subgroupBangumis.add(subgroupBangumi);
+        detail.subgroupBangumis[subgroupBangumi.dataId] = subgroupBangumi;
       }
     }
     return detail;

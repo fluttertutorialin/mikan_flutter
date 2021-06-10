@@ -10,7 +10,7 @@ import 'package:mikan_flutter/mikan_flutter_routes.dart';
 import 'package:mikan_flutter/model/season.dart';
 import 'package:mikan_flutter/model/season_gallery.dart';
 import 'package:mikan_flutter/model/year_season.dart';
-import 'package:mikan_flutter/providers/subscribed_model.dart';
+import 'package:mikan_flutter/providers/op_model.dart';
 import 'package:mikan_flutter/providers/subscribed_season_model.dart';
 import 'package:mikan_flutter/topvars.dart';
 import 'package:mikan_flutter/ui/fragments/bangumi_sliver_grid_fragment.dart';
@@ -48,7 +48,7 @@ class SubscribedSeasonPage extends StatelessWidget {
       child: ChangeNotifierProvider(
         create: (_) => SubscribedSeasonModel(this.years, this.galleries),
         child: Builder(builder: (context) {
-          final SubscribedSeasonModel seasonSubscribedModel =
+          final model =
               Provider.of<SubscribedSeasonModel>(context, listen: false);
           return Scaffold(
             body: NotificationListener(
@@ -58,7 +58,7 @@ class SubscribedSeasonPage extends StatelessWidget {
                 } else if (notification is ScrollUpdateNotification) {
                   if (notification.depth == 0) {
                     final double offset = notification.metrics.pixels;
-                    seasonSubscribedModel.hasScrolled = offset > 0.0;
+                    model.hasScrolled = offset > 0.0;
                   }
                 }
                 return true;
@@ -68,13 +68,13 @@ class SubscribedSeasonPage extends StatelessWidget {
                 shouldRebuild: (pre, next) => pre.ne(next),
                 builder: (context, galleries, __) {
                   return SmartRefresher(
-                    controller: seasonSubscribedModel.refreshController,
+                    controller: model.refreshController,
                     header: WaterDropMaterialHeader(
                       backgroundColor: theme.accentColor,
                       color: theme.accentColor.computeLuminance() < 0.5
                           ? Colors.white
                           : Colors.black,
-                      distance: Sz.statusBarHeight + 42.0,
+                      distance: Screen.statusBarHeight + 42.0,
                     ),
                     footer: Indicator.footer(
                       context,
@@ -83,8 +83,8 @@ class SubscribedSeasonPage extends StatelessWidget {
                     ),
                     enablePullDown: true,
                     enablePullUp: true,
-                    onRefresh: seasonSubscribedModel.refresh,
-                    onLoading: seasonSubscribedModel.loadMore,
+                    onRefresh: model.refresh,
+                    onLoading: model.loadMore,
                     child: _buildContentWrapper(
                       context,
                       theme,
@@ -120,15 +120,16 @@ class SubscribedSeasonPage extends StatelessWidget {
                   gallery.bangumis.isNullOrEmpty
                       ? _buildEmptySubscribedContainer(theme)
                       : BangumiSliverGridFragment(
-                    flag: gallery.title,
+                          flag: gallery.title,
                           padding: edge16,
                           bangumis: gallery.bangumis,
                           handleSubscribe: (bangumi, flag) {
-                            context.read<SubscribedModel>().subscribeBangumi(
+                            context.read<OpModel>().subscribeBangumi(
                               bangumi.id,
                               bangumi.subscribed,
                               onSuccess: () {
                                 bangumi.subscribed = !bangumi.subscribed;
+                                context.read<OpModel>().subscribeChanged(flag);
                               },
                               onError: (msg) {
                                 "订阅失败：$msg".toast();
@@ -177,48 +178,46 @@ class SubscribedSeasonPage extends StatelessWidget {
     final SeasonGallery gallery,
   ) {
     return SliverPinnedToBoxAdapter(
-      child: Container(
-        color: theme.scaffoldBackgroundColor,
-        padding: edgeH16V8,
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                gallery.title,
-                style: TextStyle(
-                  fontSize: 20,
-                  height: 1.25,
-                  fontWeight: FontWeight.bold,
+      child: Transform.translate(
+        offset: offsetY_1,
+        child: Container(
+          color: theme.scaffoldBackgroundColor,
+          padding: edgeH16V8,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  gallery.title,
+                  style: textStyle20B,
                 ),
               ),
-            ),
-            MaterialButton(
-              onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  Routes.season.name,
-                  arguments: Routes.season.d(
-                    season: Season(
-                      year: gallery.year,
-                      season: gallery.season,
-                      title: gallery.title,
-                      active: gallery.isCurrentSeason,
+              MaterialButton(
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    Routes.season.name,
+                    arguments: Routes.season.d(
+                      season: Season(
+                        year: gallery.year,
+                        season: gallery.season,
+                        title: gallery.title,
+                        active: gallery.active,
+                      ),
                     ),
-                  ),
-                );
-              },
-              color: theme.backgroundColor,
-              minWidth: 0,
-              height: 0,
-              padding: EdgeInsets.all(5.0),
-              shape: CircleBorder(),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              child: Icon(
-                FluentIcons.chevron_right_24_regular,
-                size: 16.0,
+                  );
+                },
+                color: theme.backgroundColor,
+                minWidth: 36.0,
+                padding: EdgeInsets.zero,
+                shape: circleShape,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                child: Icon(
+                  FluentIcons.chevron_right_24_regular,
+                  size: 16.0,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -228,7 +227,7 @@ class SubscribedSeasonPage extends StatelessWidget {
     return Selector<SubscribedSeasonModel, bool>(
       selector: (_, model) => model.hasScrolled,
       shouldRebuild: (pre, next) => pre != next,
-      builder: (_, hasScrolled, __) {
+      builder: (context, hasScrolled, __) {
         return SliverPinnedToBoxAdapter(
           child: AnimatedContainer(
             decoration: BoxDecoration(
@@ -238,16 +237,30 @@ class SubscribedSeasonPage extends StatelessWidget {
               borderRadius: scrollHeaderBorderRadius(hasScrolled),
               boxShadow: scrollHeaderBoxShadow(hasScrolled),
             ),
-            padding: edge16Header(),
+            padding: edge16WithStatusBar,
             duration: dur240,
             child: Row(
               children: <Widget>[
-                Text(
-                  "季度订阅",
-                  style: TextStyle(
-                    fontSize: 24,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
+                MaterialButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Icon(
+                    FluentIcons.chevron_left_24_regular,
+                    size: 16.0,
+                  ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minWidth: 36.0,
+                  shape: circleShape,
+                  color: hasScrolled
+                      ? theme.scaffoldBackgroundColor
+                      : theme.backgroundColor,
+                ),
+                sizedBoxW12,
+                Expanded(
+                  child: Text(
+                    "季度订阅",
+                    style: textStyle24B,
                   ),
                 ),
               ],

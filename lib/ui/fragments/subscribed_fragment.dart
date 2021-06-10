@@ -15,11 +15,11 @@ import 'package:mikan_flutter/model/bangumi.dart';
 import 'package:mikan_flutter/model/record_item.dart';
 import 'package:mikan_flutter/model/season_gallery.dart';
 import 'package:mikan_flutter/model/year_season.dart';
+import 'package:mikan_flutter/providers/op_model.dart';
 import 'package:mikan_flutter/providers/subscribed_model.dart';
 import 'package:mikan_flutter/topvars.dart';
 import 'package:mikan_flutter/ui/components/rss_record_item.dart';
 import 'package:mikan_flutter/ui/fragments/bangumi_sliver_grid_fragment.dart';
-import 'package:mikan_flutter/widget/common_widgets.dart';
 import 'package:mikan_flutter/widget/tap_scale_container.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -30,7 +30,7 @@ class SubscribedFragment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final SubscribedModel subscribedModel =
+    final subscribedModel =
         Provider.of<SubscribedModel>(context, listen: false);
     return AnnotatedRegion(
       value: context.fitSystemUiOverlayStyle,
@@ -53,7 +53,7 @@ class SubscribedFragment extends StatelessWidget {
               color: theme.accentColor.computeLuminance() < 0.5
                   ? Colors.white
                   : Colors.black,
-              distance: Sz.statusBarHeight + 42.0,
+              distance: Screen.statusBarHeight + 42.0,
             ),
             controller: subscribedModel.refreshController,
             enablePullDown: true,
@@ -84,7 +84,7 @@ class SubscribedFragment extends StatelessWidget {
                   ],
                 ),
                 _buildSeeMore(theme, subscribedModel),
-                CommonWidgets.sliverBottomSpace,
+                sliverSizedBoxH80,
               ],
             ),
           ),
@@ -107,17 +107,13 @@ class SubscribedFragment extends StatelessWidget {
               borderRadius: scrollHeaderBorderRadius(hasScrolled),
               boxShadow: scrollHeaderBoxShadow(hasScrolled),
             ),
-            padding: edge16Header(),
+            padding: edge16WithStatusBar,
             duration: dur240,
             child: Row(
               children: <Widget>[
                 Text(
                   "我的订阅",
-                  style: TextStyle(
-                    fontSize: 24,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: textStyle24B,
                 ),
               ],
             ),
@@ -141,12 +137,7 @@ class SubscribedFragment extends StatelessWidget {
               width: double.infinity,
               height: 240.0,
               margin: edgeH16V8,
-              padding: EdgeInsets.only(
-                left: 24.0,
-                right: 24.0,
-                bottom: 24.0,
-                top: 24.0,
-              ),
+              padding: edge24,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topRight,
@@ -156,9 +147,9 @@ class SubscribedFragment extends StatelessWidget {
                     theme.backgroundColor.withOpacity(0.9),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: borderRadius16,
               ),
-              child: Center(child: CupertinoActivityIndicator()),
+              child: centerLoading,
             ),
           );
         }
@@ -168,12 +159,7 @@ class SubscribedFragment extends StatelessWidget {
               width: double.infinity,
               height: 240.0,
               margin: edgeH16V8,
-              padding: EdgeInsets.only(
-                left: 24.0,
-                right: 24.0,
-                bottom: 24.0,
-                top: 24.0,
-              ),
+              padding: edge24,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topRight,
@@ -183,7 +169,7 @@ class SubscribedFragment extends StatelessWidget {
                     theme.backgroundColor.withOpacity(0.9),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: borderRadius16,
               ),
               child: Center(child: Text(">_< 您还没有订阅任何番组，快去添加订阅吧")),
             ),
@@ -194,11 +180,12 @@ class SubscribedFragment extends StatelessWidget {
           bangumis: bangumis!,
           padding: edgeH16V8,
           handleSubscribe: (bangumi, flag) {
-            context.read<SubscribedModel>().subscribeBangumi(
+            context.read<OpModel>().subscribeBangumi(
               bangumi.id,
               bangumi.subscribed,
               onSuccess: () {
                 bangumi.subscribed = !bangumi.subscribed;
+                context.read<OpModel>().subscribeChanged(flag);
               },
               onError: (msg) {
                 "订阅失败：$msg".toast();
@@ -215,58 +202,56 @@ class SubscribedFragment extends StatelessWidget {
     final SubscribedModel subscribedModel,
   ) {
     return SliverPinnedToBoxAdapter(
-      child: Container(
-        color: theme.scaffoldBackgroundColor,
-        padding: const EdgeInsets.only(
-          left: 16.0,
-          right: 16.0,
-          top: 4.0,
-          bottom: 4.0,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                "季度订阅",
-                style: textStyle20B,
+      child: Transform.translate(
+        offset: offsetY_1,
+        child: Container(
+          color: theme.scaffoldBackgroundColor,
+          padding: edgeH16V8,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  "季度订阅",
+                  style: textStyle20B,
+                ),
               ),
-            ),
-            Selector<SubscribedModel, List<YearSeason>?>(
-              selector: (_, model) => model.years,
-              shouldRebuild: (pre, next) => pre.ne(next),
-              builder: (context, years, __) {
-                if (years.isNullOrEmpty) return SizedBox();
-                return MaterialButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      Routes.subscribedSeason.name,
-                      arguments: Routes.subscribedSeason.d(
-                        years: subscribedModel.years ?? [],
-                        galleries: [
-                          SeasonGallery(
-                            year: subscribedModel.season!.year,
-                            season: subscribedModel.season!.season,
-                            title: subscribedModel.season!.title,
-                            bangumis: subscribedModel.bangumis ?? [],
-                          )
-                        ],
-                      ),
-                    );
-                  },
-                  color: theme.backgroundColor,
-                  minWidth: 0,
-                  padding: EdgeInsets.all(5.0),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: CircleBorder(),
-                  child: Icon(
-                    FluentIcons.chevron_right_24_regular,
-                    size: 16.0,
-                  ),
-                );
-              },
-            )
-          ],
+              Selector<SubscribedModel, List<YearSeason>?>(
+                selector: (_, model) => model.years,
+                shouldRebuild: (pre, next) => pre.ne(next),
+                builder: (context, years, __) {
+                  if (years.isNullOrEmpty) return sizedBox;
+                  return MaterialButton(
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        Routes.subscribedSeason.name,
+                        arguments: Routes.subscribedSeason.d(
+                          years: subscribedModel.years ?? [],
+                          galleries: [
+                            SeasonGallery(
+                              year: subscribedModel.season!.year,
+                              season: subscribedModel.season!.season,
+                              title: subscribedModel.season!.title,
+                              bangumis: subscribedModel.bangumis ?? [],
+                            )
+                          ],
+                        ),
+                      );
+                    },
+                    color: theme.backgroundColor,
+                    minWidth: 36.0,
+                    padding: EdgeInsets.zero,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: circleShape,
+                    child: Icon(
+                      FluentIcons.chevron_right_24_regular,
+                      size: 16.0,
+                    ),
+                  );
+                },
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -278,37 +263,35 @@ class SubscribedFragment extends StatelessWidget {
     final SubscribedModel subscribedModel,
   ) {
     return SliverPinnedToBoxAdapter(
-      child: Container(
-        color: theme.scaffoldBackgroundColor,
-        padding: const EdgeInsets.only(
-          left: 16.0,
-          right: 16.0,
-          top: 4.0,
-          bottom: 4.0,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                "三日更新",
-                style: textStyle20B,
+      child: Transform.translate(
+        offset: offsetY_1,
+        child: Container(
+          color: theme.scaffoldBackgroundColor,
+          padding: edgeH16V8,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  "最近更新",
+                  style: textStyle20B,
+                ),
               ),
-            ),
-            MaterialButton(
-              onPressed: () {
-                _toRecentSubscribedPage(context);
-              },
-              color: theme.backgroundColor,
-              minWidth: 0,
-              padding: EdgeInsets.all(5.0),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              shape: CircleBorder(),
-              child: Icon(
-                FluentIcons.chevron_right_24_regular,
-                size: 16.0,
+              MaterialButton(
+                onPressed: () {
+                  _toRecentSubscribedPage(context);
+                },
+                color: theme.backgroundColor,
+                minWidth: 36.0,
+                padding: EdgeInsets.zero,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: circleShape,
+                child: Icon(
+                  FluentIcons.chevron_right_24_regular,
+                  size: 16.0,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -328,12 +311,7 @@ class SubscribedFragment extends StatelessWidget {
               width: double.infinity,
               height: 120.0,
               margin: edgeH16V8,
-              padding: EdgeInsets.only(
-                left: 24.0,
-                right: 24.0,
-                bottom: 24.0,
-                top: 24.0,
-              ),
+              padding: edge24,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topRight,
@@ -343,9 +321,9 @@ class SubscribedFragment extends StatelessWidget {
                     theme.backgroundColor.withOpacity(0.9),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: borderRadius16,
               ),
-              child: Center(child: CupertinoActivityIndicator()),
+              child: centerLoading,
             ),
           );
         }
@@ -353,11 +331,11 @@ class SubscribedFragment extends StatelessWidget {
           return SliverPadding(
             padding: edgeH16V8,
             sliver: SliverGrid(
-              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 108.0,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 128.0,
                 crossAxisSpacing: 12.0,
                 mainAxisSpacing: 12.0,
-                childAspectRatio: 5.0 / 4.0,
+                childAspectRatio: 0.8,
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
@@ -372,12 +350,7 @@ class SubscribedFragment extends StatelessWidget {
           child: Container(
             width: double.infinity,
             margin: edgeH16V8,
-            padding: EdgeInsets.only(
-              left: 24.0,
-              right: 24.0,
-              bottom: 24.0,
-              top: 24.0,
-            ),
+            padding: edge24,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topRight,
@@ -387,7 +360,7 @@ class SubscribedFragment extends StatelessWidget {
                   theme.backgroundColor.withOpacity(0.9),
                 ],
               ),
-              borderRadius: BorderRadius.circular(16.0),
+              borderRadius: borderRadius16,
             ),
             child: Center(child: Text(">_< 您还没有订阅任何番组，快去添加订阅吧")),
           ),
@@ -415,93 +388,107 @@ class SubscribedFragment extends StatelessWidget {
     final String bangumiId = entry.key;
     final String badge = recordsLength > 99 ? "99+" : "+$recordsLength";
     final String currFlag = "rss:$bangumiId:$bangumiCover";
-    return TapScaleContainer(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 8.0,
-            color: Colors.black.withOpacity(0.08),
-          ),
-        ],
-      ),
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          Routes.bangumi.name,
-          arguments: Routes.bangumi.d(
-            heroTag: currFlag,
-            bangumiId: bangumiId,
-            cover: bangumiCover,
-          ),
-        );
-      },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8.0),
-        child: Stack(
-          fit: StackFit.loose,
-          clipBehavior: Clip.antiAlias,
-          children: [
-            Positioned.fill(
-              child: Hero(
-                tag: currFlag,
-                child: ExtendedImage(
-                  image: ExtendedNetworkImageProvider(bangumiCover),
-                  fit: BoxFit.cover,
-                  loadStateChanged: (state) {
-                    switch (state.extendedImageLoadState) {
-                      case LoadState.loading:
-                        return Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(
-                            child: ExtendedImage.asset(
-                              "assets/mikan.png",
-                            ),
-                          ),
-                        );
-                      case LoadState.failed:
-                        return Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(
-                            child: ExtendedImage.asset(
-                              "assets/mikan.png",
-                              colorBlendMode: BlendMode.color,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        );
-                      case LoadState.completed:
-                        return null;
-                    }
-                  },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TapScaleContainer(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 8.0,
+                  color: Colors.black.withOpacity(0.08),
                 ),
-              ),
+              ],
             ),
-            Positioned(
-              right: -10,
-              top: 4,
-              child: Transform.rotate(
-                angle: Math.pi / 4.0,
-                child: Container(
-                  width: 42.0,
-                  color: Colors.redAccent,
-                  child: Text(
-                    badge,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 10.0,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
-                      wordSpacing: 1.0,
-                      height: 1.25,
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                Routes.bangumi.name,
+                arguments: Routes.bangumi.d(
+                  heroTag: currFlag,
+                  bangumiId: bangumiId,
+                  cover: bangumiCover,
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: borderRadius8,
+              child: Stack(
+                fit: StackFit.loose,
+                clipBehavior: Clip.antiAlias,
+                children: [
+                  Positioned.fill(
+                    child: Hero(
+                      tag: currFlag,
+                      child: ExtendedImage(
+                        image: ExtendedNetworkImageProvider(bangumiCover),
+                        fit: BoxFit.cover,
+                        loadStateChanged: (state) {
+                          switch (state.extendedImageLoadState) {
+                            case LoadState.loading:
+                              return Padding(
+                                padding: edge16,
+                                child: Center(
+                                  child: ExtendedImage.asset(
+                                    "assets/mikan.png",
+                                  ),
+                                ),
+                              );
+                            case LoadState.failed:
+                              return Padding(
+                                padding: edge16,
+                                child: Center(
+                                  child: ExtendedImage.asset(
+                                    "assets/mikan.png",
+                                    colorBlendMode: BlendMode.color,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              );
+                            case LoadState.completed:
+                              return null;
+                          }
+                        },
+                      ),
                     ),
                   ),
-                ),
+                  Positioned(
+                    right: -10,
+                    top: 4,
+                    child: Transform.rotate(
+                      angle: Math.pi / 4.0,
+                      child: Container(
+                        width: 42.0,
+                        color: Colors.redAccent,
+                        child: Text(
+                          badge,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 10.0,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                            wordSpacing: 1.0,
+                            height: 1.25,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        sizedBoxH8,
+        Text(
+          records.first.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: textStyle15B500,
+        )
+      ],
     );
   }
 
@@ -513,39 +500,37 @@ class SubscribedFragment extends StatelessWidget {
       selector: (_, model) => model.records,
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (_, records, __) {
-        if (records.isNullOrEmpty) return sliverToBoxAdapter;
+        if (records.isNullOrEmpty) return emptySliverToBoxAdapter;
         return SliverPinnedToBoxAdapter(
-          child: Container(
-            color: theme.scaffoldBackgroundColor,
-            padding: const EdgeInsets.only(
-              left: 16.0,
-              right: 16.0,
-              top: 4.0,
-              bottom: 4.0,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "更新列表",
-                    style: textStyle20B,
+          child: Transform.translate(
+            offset: offsetY_1,
+            child: Container(
+              color: theme.scaffoldBackgroundColor,
+              padding: edgeH16V8,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      "更新列表",
+                      style: textStyle20B,
+                    ),
                   ),
-                ),
-                MaterialButton(
-                  onPressed: () {
-                    _toRecentSubscribedPage(context);
-                  },
-                  color: theme.backgroundColor,
-                  minWidth: 0,
-                  padding: EdgeInsets.all(5.0),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: CircleBorder(),
-                  child: Icon(
-                    FluentIcons.chevron_right_24_regular,
-                    size: 16.0,
+                  MaterialButton(
+                    onPressed: () {
+                      _toRecentSubscribedPage(context);
+                    },
+                    color: theme.backgroundColor,
+                    minWidth: 36.0,
+                    padding: EdgeInsets.zero,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: circleShape,
+                    child: Icon(
+                      FluentIcons.chevron_right_24_regular,
+                      size: 16.0,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -561,7 +546,7 @@ class SubscribedFragment extends StatelessWidget {
         shouldRebuild: (pre, next) => pre.ne(next),
         builder: (_, records, __) {
           if (records.isNullOrEmpty) {
-            return sliverToBoxAdapter;
+            return emptySliverToBoxAdapter;
           }
           return SliverGrid(
             delegate: SliverChildBuilderDelegate(
@@ -582,11 +567,11 @@ class SubscribedFragment extends StatelessWidget {
               },
               childCount: records!.length,
             ),
-            gridDelegate: SliverGridDelegateWithMinCrossAxisExtent(
+            gridDelegate: const SliverGridDelegateWithMinCrossAxisExtent(
               minCrossAxisExtent: 360.0,
               crossAxisSpacing: 12.0,
               mainAxisSpacing: 12.0,
-              mainAxisExtent: 176,
+              mainAxisExtent: 180.0,
             ),
           );
         },
@@ -601,14 +586,11 @@ class SubscribedFragment extends StatelessWidget {
     return Selector<SubscribedModel, int>(
       builder: (context, length, _) {
         if (length == 0) {
-          return sliverToBoxAdapter;
+          return emptySliverToBoxAdapter;
         }
         return SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 16.0,
-            ),
+            padding: edge16,
             child: TextButton(
               onPressed: () {
                 _toRecentSubscribedPage(context);
@@ -621,9 +603,6 @@ class SubscribedFragment extends StatelessWidget {
               ),
               child: Text(
                 "- _ - _ -  查看更多  - _ - _ -",
-                style: TextStyle(
-                  color: theme.accentColor,
-                ),
               ),
             ),
           ),

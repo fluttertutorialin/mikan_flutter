@@ -5,12 +5,13 @@ import 'package:extended_image/extended_image.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mikan_flutter/internal/delegate.dart';
 import 'package:mikan_flutter/internal/extension.dart';
 import 'package:mikan_flutter/mikan_flutter_routes.dart';
 import 'package:mikan_flutter/model/bangumi.dart';
+import 'package:mikan_flutter/providers/op_model.dart';
 import 'package:mikan_flutter/topvars.dart';
 import 'package:mikan_flutter/widget/tap_scale_container.dart';
+import 'package:provider/provider.dart';
 
 typedef HandleSubscribe = void Function(Bangumi bangumi, String flag);
 
@@ -42,11 +43,11 @@ class BangumiSliverGridFragment extends StatelessWidget {
     return SliverPadding(
       padding: this.padding,
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithMinCrossAxisExtent(
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          mainAxisExtent: 208.0,
-          minCrossAxisExtent: 112.0,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          crossAxisSpacing: 12.0,
+          mainAxisSpacing: 12.0,
+          maxCrossAxisExtent: 156.0,
+          childAspectRatio: 0.6,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
@@ -151,12 +152,11 @@ class BangumiSliverGridFragment extends StatelessWidget {
           showDuration: dur3000,
           message: msg,
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Container(
                 width: 4,
                 height: 12,
-                margin: edgeT2,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -175,7 +175,7 @@ class BangumiSliverGridFragment extends StatelessWidget {
                   bangumi.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: textStyle14B500,
+                  style: textStyle16B500,
                 ),
               ),
             ],
@@ -185,46 +185,56 @@ class BangumiSliverGridFragment extends StatelessWidget {
           Text(
             bangumi.updateAt,
             maxLines: 1,
-            style: textStyle10,
+            style: TextStyle(
+              fontSize: 12.0,
+              height: 1.25,
+              color: theme.textTheme.subtitle1?.color,
+            ),
           )
       ],
     );
   }
 
   Widget _buildSubscribeButton(final Bangumi bangumi, final String currFlag) {
-    return bangumi.subscribed
-        ? SizedBox(
-            width: 28.0,
-            height: 28.0,
-            child: IconButton(
-              tooltip: "取消订阅",
-              padding: edge4,
-              iconSize: 20.0,
-              icon: Icon(
-                FluentIcons.heart_24_filled,
-                color: Colors.redAccent,
-              ),
-              onPressed: () {
-                this.handleSubscribe.call(bangumi, currFlag);
-              },
-            ),
-          )
-        : SizedBox(
-            width: 28.0,
-            height: 28.0,
-            child: IconButton(
-              tooltip: "订阅",
-              padding: edge4,
-              iconSize: 20.0,
-              icon: Icon(
-                FluentIcons.heart_24_regular,
-                color: Colors.blueGrey,
-              ),
-              onPressed: () {
-                this.handleSubscribe.call(bangumi, currFlag);
-              },
-            ),
-          );
+    return Selector<OpModel, String>(
+      selector: (_, model) => model.flag,
+      shouldRebuild: (_, next) => next == currFlag,
+      builder: (_, __, ___) {
+        return bangumi.subscribed
+            ? SizedBox(
+                width: 32.0,
+                height: 32.0,
+                child: IconButton(
+                  tooltip: "取消订阅",
+                  padding: edge4,
+                  iconSize: 24.0,
+                  icon: Icon(
+                    FluentIcons.heart_24_filled,
+                    color: Colors.redAccent,
+                  ),
+                  onPressed: () {
+                    this.handleSubscribe.call(bangumi, currFlag);
+                  },
+                ),
+              )
+            : SizedBox(
+                width: 32.0,
+                height: 32.0,
+                child: IconButton(
+                  tooltip: "订阅",
+                  padding: edge4,
+                  iconSize: 24.0,
+                  icon: Icon(
+                    FluentIcons.heart_24_regular,
+                    color: Colors.redAccent.shade100,
+                  ),
+                  onPressed: () {
+                    this.handleSubscribe.call(bangumi, currFlag);
+                  },
+                ),
+              );
+      },
+    );
   }
 
   Widget _buildBangumiItemCover(

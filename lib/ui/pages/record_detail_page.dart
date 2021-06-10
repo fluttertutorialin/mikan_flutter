@@ -8,13 +8,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:mikan_flutter/internal/delegate.dart';
 import 'package:mikan_flutter/internal/extension.dart';
 import 'package:mikan_flutter/internal/screen.dart';
 import 'package:mikan_flutter/model/record_details.dart';
+import 'package:mikan_flutter/providers/op_model.dart';
 import 'package:mikan_flutter/providers/record_detail_model.dart';
-import 'package:mikan_flutter/providers/subscribed_model.dart';
 import 'package:mikan_flutter/topvars.dart';
 import 'package:provider/provider.dart';
+import 'package:waterfall_flow/waterfall_flow.dart';
 
 @FFRoute(
   name: "record-detail",
@@ -56,99 +58,60 @@ class RecordDetailPage extends StatelessWidget {
     final ThemeData theme,
   ) {
     return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: EdgeInsets.only(
-          top: Sz.statusBarHeight + 12.0,
-          left: 16.0,
-          right: 16.0,
+      top: 12.0 + Screen.statusBarHeight,
+      left: 16.0,
+      child: MaterialButton(
+        onPressed: () {
+          Navigator.pop(context);
+        },
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        child: Icon(
+          FluentIcons.chevron_left_24_regular,
+          size: 16.0,
         ),
-        child: Row(
-          children: [
-            MaterialButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Icon(FluentIcons.chevron_left_24_regular),
-              color: theme.backgroundColor.withOpacity(0.87),
-              minWidth: 0,
-              padding: EdgeInsets.all(10.0),
-              shape: CircleBorder(),
-            ),
-          ],
-        ),
+        color: theme.backgroundColor,
+        minWidth: 36.0,
+        padding: EdgeInsets.zero,
+        shape: circleShape,
       ),
     );
   }
 
   Widget _buildBackground(final ThemeData theme) {
     return Positioned.fill(
-      child: Selector<RecordDetailModel, RecordDetail?>(
-        selector: (_, model) => model.recordDetail,
-        shouldRebuild: (pre, next) => pre != next,
-        builder: (_, recordDetail, __) {
-          if (recordDetail == null) return const SizedBox();
-          return Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                fit: BoxFit.cover,
-                image: ExtendedNetworkImageProvider(recordDetail.cover),
-              ),
-            ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaY: 10.0, sigmaX: 10.0),
-              child: Selector<RecordDetailModel, Color?>(
-                selector: (_, model) => model.coverMainColor,
-                shouldRebuild: (pre, next) => pre != next,
-                builder: (_, bgColor, __) {
-                  final color = bgColor ?? theme.backgroundColor;
-                  return AnimatedContainer(
-                    duration: Duration(milliseconds: 640),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, color],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildContentWrapper(final ThemeData theme) {
-    return Positioned.fill(
-      child: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
+      child: ClipRect(
         child: Selector<RecordDetailModel, RecordDetail?>(
-          selector: (context, model) => model.recordDetail,
+          selector: (_, model) => model.recordDetail,
           shouldRebuild: (pre, next) => pre != next,
-          builder: (context, recordDetail, __) {
-            if (recordDetail == null) {
-              return sizedBox;
-            }
-            return Column(
-              children: [
-                SizedBox(height: 160.0 + Sz.statusBarHeight),
-                _buildRecordTop(
-                  context,
-                  theme,
-                  recordDetail,
+          builder: (_, recordDetail, __) {
+            if (recordDetail == null) return sizedBox;
+            return Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: ExtendedNetworkImageProvider(recordDetail.cover),
                 ),
-                _buildBangumiBase(
-                  theme,
-                  recordDetail,
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaY: 10.0, sigmaX: 10.0),
+                child: Selector<RecordDetailModel, Color?>(
+                  selector: (_, model) => model.coverMainColor,
+                  shouldRebuild: (pre, next) => pre != next,
+                  builder: (_, bgColor, __) {
+                    final color = bgColor ?? theme.backgroundColor;
+                    return AnimatedContainer(
+                      duration: Duration(milliseconds: 640),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, color],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                _buildRecordIntro(theme, recordDetail),
-                SizedBox(height: Sz.navBarHeight + 36.0),
-              ],
+              ),
             );
           },
         ),
@@ -156,19 +119,49 @@ class RecordDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBangumiBase(
+  Widget _buildContentWrapper(final ThemeData theme) {
+    return Positioned.fill(
+      child: Selector<RecordDetailModel, RecordDetail?>(
+        selector: (context, model) => model.recordDetail,
+        shouldRebuild: (pre, next) => pre != next,
+        builder: (context, recordDetail, __) {
+          if (recordDetail == null) {
+            return sizedBox;
+          }
+          return WaterfallFlow(
+            padding: edgeH16T90B24WithStatusBar,
+            gridDelegate:
+                const SliverWaterfallFlowDelegateWithMinCrossAxisExtent(
+              minCrossAxisExtent: 400.0,
+              mainAxisSpacing: 16.0,
+              crossAxisSpacing: 16.0,
+            ),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              _buildTop(
+                context,
+                theme,
+                recordDetail,
+              ),
+              _buildBase(
+                theme,
+                recordDetail,
+              ),
+              _buildIntro(theme, recordDetail),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBase(
     final ThemeData theme,
     final RecordDetail recordDetail,
   ) {
     final List<String> tags = recordDetail.tags;
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.only(
-        left: 16.0,
-        right: 16.0,
-        bottom: 12.0,
-        top: 12.0,
-      ),
       padding: edge24,
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -196,9 +189,9 @@ class RecordDetailPage extends StatelessWidget {
           if (recordDetail.name.isNotBlank) sizedBoxH8,
           Text(
             recordDetail.title,
-            style: textStyle14,
+            style: textStyle14B500,
           ),
-          Divider(),
+          const Divider(),
           ...recordDetail.more.entries
               .map((e) => Text(
                     "${e.key}: ${e.value}",
@@ -234,7 +227,7 @@ class RecordDetailPage extends StatelessWidget {
                           theme.primaryColor.withOpacity(0.56),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(2.0),
+                      borderRadius: borderRadius2,
                     ),
                     child: Text(
                       tags[index],
@@ -267,16 +260,16 @@ class RecordDetailPage extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           height: double.infinity,
-          child: Center(child: CupertinoActivityIndicator()),
+          child: centerLoading,
         ),
       ),
     );
   }
 
-  Widget _buildRecordTop(
+  Widget _buildTop(
     final BuildContext context,
     final ThemeData theme,
-    final RecordDetail recordDetail,
+    final RecordDetail detail,
   ) {
     final Color accentTextColor = theme.accentColor.computeLuminance() < 0.5
         ? Colors.white
@@ -290,8 +283,6 @@ class RecordDetailPage extends StatelessWidget {
           fit: StackFit.loose,
           children: [
             Positioned.fill(
-              left: 16.0,
-              right: 16.0,
               child: FractionallySizedBox(
                 widthFactor: 1,
                 heightFactor: 0.5,
@@ -308,20 +299,20 @@ class RecordDetailPage extends StatelessWidget {
                         theme.backgroundColor.withOpacity(0.9),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16.0),
+                    borderRadius: borderRadius16,
                   ),
                 ),
               ),
             ),
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
+              margin: edge24,
               child: Row(
                 children: [
-                  _buildBangumiCover(context, recordDetail),
+                  _buildBangumiCover(context, detail),
                   spacer,
                   MaterialButton(
                     onPressed: () {
-                      recordDetail.shareString.share();
+                      detail.shareString.share();
                     },
                     child: Container(
                       width: 42.0,
@@ -344,12 +335,12 @@ class RecordDetailPage extends StatelessWidget {
                     minWidth: 0,
                     color: accentTextColor,
                     padding: EdgeInsets.zero,
-                    shape: CircleBorder(),
+                    shape: circleShape,
                   ),
                   sizedBoxW16,
                   MaterialButton(
                     onPressed: () {
-                      recordDetail.magnet.launchAppAndCopy();
+                      detail.magnet.launchAppAndCopy();
                     },
                     child: Container(
                       width: 48.0,
@@ -372,7 +363,7 @@ class RecordDetailPage extends StatelessWidget {
                     minWidth: 0,
                     color: primaryTextColor,
                     padding: EdgeInsets.zero,
-                    shape: CircleBorder(),
+                    shape: circleShape,
                   ),
                 ],
               ),
@@ -383,18 +374,13 @@ class RecordDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordIntro(
+  Widget _buildIntro(
     final ThemeData theme,
     final RecordDetail recordDetail,
   ) {
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.only(
-        left: 16.0,
-        right: 16.0,
-        bottom: 12.0,
-      ),
-      padding: EdgeInsets.all(24.0),
+      padding: edge24,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -404,14 +390,14 @@ class RecordDetailPage extends StatelessWidget {
             theme.backgroundColor.withOpacity(0.9),
           ],
         ),
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: borderRadius16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             "概况简介",
-            style: textStyle20B,
+            style: textStyle18B,
           ),
           sizedBoxH12,
           HtmlWidget(
@@ -443,7 +429,7 @@ class RecordDetailPage extends StatelessWidget {
         Widget child;
         if (state.extendedImageLoadState == LoadState.loading) {
           child = Container(
-            padding: EdgeInsets.all(28.0),
+            padding: edge28,
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
@@ -451,7 +437,7 @@ class RecordDetailPage extends StatelessWidget {
                   color: Colors.black.withOpacity(0.6),
                 ),
               ],
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: borderRadius8,
             ),
             child: Center(
               child: SpinKitPumpingHeart(
@@ -471,7 +457,7 @@ class RecordDetailPage extends StatelessWidget {
                   color: Colors.black.withAlpha(24),
                 )
               ],
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: borderRadius8,
               image: DecorationImage(
                 image: ExtendedAssetImageProvider("assets/mikan.png"),
                 fit: BoxFit.cover,
@@ -492,7 +478,7 @@ class RecordDetailPage extends StatelessWidget {
                   color: Colors.black.withAlpha(24),
                 )
               ],
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: borderRadius8,
               image: DecorationImage(
                 image: state.imageProvider,
                 fit: BoxFit.cover,
@@ -525,19 +511,19 @@ class RecordDetailPage extends StatelessWidget {
         final Widget child = subscribed
             ? IconButton(
                 tooltip: "取消订阅",
-                padding: EdgeInsets.all(4.0),
+                padding: edge4,
                 iconSize: 20.0,
                 icon: Icon(
                   FluentIcons.heart_24_filled,
                   color: Colors.redAccent,
                 ),
                 onPressed: () {
-                  context.read<SubscribedModel>().subscribeBangumi(
+                  context.read<OpModel>().subscribeBangumi(
                     recordDetail.id,
                     recordDetail.subscribed,
                     onSuccess: () {
                       recordDetail.subscribed = !recordDetail.subscribed;
-                      context.read<RecordDetailModel>().notifyListeners();
+                      context.read<RecordDetailModel>().subscribeChanged();
                     },
                     onError: (msg) {
                       "订阅失败：$msg".toast();
@@ -547,19 +533,19 @@ class RecordDetailPage extends StatelessWidget {
               )
             : IconButton(
                 tooltip: "订阅",
-                padding: EdgeInsets.all(4.0),
+                padding: edge4,
                 iconSize: 20.0,
                 icon: Icon(
                   FluentIcons.heart_24_regular,
-                  color: Colors.blueGrey,
+                  color: Colors.redAccent.shade100,
                 ),
                 onPressed: () {
-                  context.read<SubscribedModel>().subscribeBangumi(
+                  context.read<OpModel>().subscribeBangumi(
                     recordDetail.id,
                     recordDetail.subscribed,
                     onSuccess: () {
                       recordDetail.subscribed = !recordDetail.subscribed;
-                      context.read<RecordDetailModel>().notifyListeners();
+                      context.read<RecordDetailModel>().subscribeChanged();
                     },
                     onError: (msg) {
                       "订阅失败：$msg".toast();

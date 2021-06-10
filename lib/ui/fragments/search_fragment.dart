@@ -4,6 +4,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:mikan_flutter/internal/delegate.dart';
 import 'package:mikan_flutter/internal/extension.dart';
 import 'package:mikan_flutter/mikan_flutter_routes.dart';
 import 'package:mikan_flutter/model/bangumi.dart';
@@ -25,8 +26,7 @@ class SearchFragment extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => SearchModel(),
       child: Builder(builder: (context) {
-        final SearchModel searchModel =
-            Provider.of<SearchModel>(context, listen: false);
+        final searchModel = Provider.of<SearchModel>(context, listen: false);
         return Scaffold(
           body: NotificationListener(
             onNotification: (notification) {
@@ -75,11 +75,11 @@ class SearchFragment extends StatelessWidget {
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (context, records, __) {
         if (records.isNullOrEmpty) {
-          return sliverToBoxAdapter;
+          return emptySliverToBoxAdapter;
         }
         return SliverPadding(
-          padding: EdgeInsets.symmetric(vertical: 8.0),
-          sliver: SliverList(
+          padding: edgeH16T8B16,
+          sliver: SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (_, index) {
                 final RecordItem record = records![index];
@@ -98,6 +98,12 @@ class SearchFragment extends StatelessWidget {
               },
               childCount: records!.length,
             ),
+            gridDelegate: const SliverGridDelegateWithMinCrossAxisExtent(
+              minCrossAxisExtent: 360.0,
+              mainAxisSpacing: 16.0,
+              crossAxisSpacing: 16.0,
+              mainAxisExtent: 156.0,
+            ),
           ),
         );
       },
@@ -110,7 +116,7 @@ class SearchFragment extends StatelessWidget {
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (context, records, child) {
         if (records.isNullOrEmpty) {
-          return sliverToBoxAdapter;
+          return emptySliverToBoxAdapter;
         }
         return SliverToBoxAdapter(
           child: Padding(
@@ -135,18 +141,15 @@ class SearchFragment extends StatelessWidget {
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (context, bangumis, __) {
         if (bangumis.isNullOrEmpty) {
-          return sliverToBoxAdapter;
+          return emptySliverToBoxAdapter;
         }
         return SliverToBoxAdapter(
           child: Container(
             width: double.infinity,
             height: 220,
             child: ListView.builder(
-              physics: BouncingScrollPhysics(),
-              padding: EdgeInsets.only(
-                left: 16.0,
-                right: 16.0,
-              ),
+              physics: const BouncingScrollPhysics(),
+              padding: edgeH16,
               scrollDirection: Axis.horizontal,
               itemCount: bangumis!.length,
               itemBuilder: (_, index) {
@@ -174,7 +177,7 @@ class SearchFragment extends StatelessWidget {
       message: bangumi.name,
       child: TapScaleContainer(
         height: double.infinity,
-        margin: edgeHT16,
+        margin: edgeV8R12,
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
@@ -212,7 +215,7 @@ class SearchFragment extends StatelessWidget {
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (_, bangumis, child) {
         if (bangumis.isNullOrEmpty) {
-          return sliverToBoxAdapter;
+          return emptySliverToBoxAdapter;
         }
         return SliverToBoxAdapter(child: child);
       },
@@ -239,19 +242,19 @@ class SearchFragment extends StatelessWidget {
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (_, subgroups, __) {
         if (subgroups.isNullOrEmpty) {
-          return sliverToBoxAdapter;
+          return emptySliverToBoxAdapter;
         }
         final bool less = subgroups!.length < 5;
         return SliverPinnedToBoxAdapter(
           child: Transform.translate(
-            offset: Offset(0, -2),
+            offset: offsetY_1,
             child: Selector<SearchModel, bool>(
               selector: (_, model) => model.hasScrolled,
               shouldRebuild: (pre, next) => pre != next,
               builder: (_, hasScrolled, child) {
                 return AnimatedContainer(
                   width: double.infinity,
-                  height: less ? 72.0 : 112.0,
+                  height: less ? 56.0 : 96.0,
                   decoration: BoxDecoration(
                     color: theme.scaffoldBackgroundColor,
                     borderRadius: scrollHeaderBorderRadius(hasScrolled),
@@ -262,13 +265,8 @@ class SearchFragment extends StatelessWidget {
                 );
               },
               child: WaterfallFlow.builder(
-                physics: BouncingScrollPhysics(),
-                padding: EdgeInsets.only(
-                  top: 16.0,
-                  left: 16.0,
-                  right: 16.0,
-                  bottom: 16.0,
-                ),
+                physics: const BouncingScrollPhysics(),
+                padding: edgeH16V8,
                 scrollDirection: Axis.horizontal,
                 itemCount: subgroups.length,
                 gridDelegate:
@@ -305,9 +303,7 @@ class SearchFragment extends StatelessWidget {
         return MaterialButton(
           minWidth: 0,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: borderRadius10),
           child: Text(
             subgroup.name,
             style: TextStyle(
@@ -333,11 +329,9 @@ class SearchFragment extends StatelessWidget {
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (_, subgroups, child) {
         if (subgroups.isNullOrEmpty) {
-          return sliverToBoxAdapter;
+          return emptySliverToBoxAdapter;
         }
-        return SliverToBoxAdapter(
-          child: child,
-        );
+        return SliverToBoxAdapter(child: child);
       },
       child: Padding(
         padding: edgeH16V8,
@@ -361,16 +355,11 @@ class SearchFragment extends StatelessWidget {
     return SliverPinnedToBoxAdapter(
       child: Container(
         color: theme.scaffoldBackgroundColor,
-        padding: EdgeInsets.only(
-          left: 16.0,
-          right: 16.0,
-          top: 24.0,
-          bottom: 16.0,
-        ),
+        padding: edgeH16T24B8,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeaderTitle(context),
+            _buildHeaderTitle(context, theme),
             sizedBoxH12,
             _buildHeaderSearchField(theme, searchModel),
           ],
@@ -381,52 +370,55 @@ class SearchFragment extends StatelessWidget {
 
   Widget _buildHeaderSearchField(
       final ThemeData theme, final SearchModel searchModel) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: TextField(
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          floatingLabelBehavior: FloatingLabelBehavior.never,
-          labelText: '请输入搜索关键字',
-          prefixIcon: Icon(
-            FluentIcons.search_24_regular,
-            color: theme.accentColor,
-          ),
-          contentPadding: EdgeInsets.only(top: -2),
-          alignLabelWithHint: true,
+    return TextField(
+      decoration: InputDecoration(
+        labelText: '请输入关键字',
+        prefixIcon: Icon(
+          FluentIcons.search_24_regular,
+          color: theme.accentColor,
         ),
-        cursorColor: theme.accentColor,
-        textAlign: TextAlign.left,
-        autofocus: true,
-        maxLines: 1,
-        style: TextStyle(
-          height: 1.25,
+        contentPadding: EdgeInsets.only(
+          left: 14.0,
+          right: 14.0,
         ),
-        textInputAction: TextInputAction.search,
-        controller: searchModel.keywordsController,
-        keyboardType: TextInputType.text,
-        onSubmitted: (keywords) {
-          if (keywords.isNullOrBlank) return;
-          searchModel.search(keywords);
-        },
+        floatingLabelBehavior: FloatingLabelBehavior.never,
       ),
+      cursorColor: theme.accentColor,
+      textAlign: TextAlign.left,
+      autofocus: true,
+      maxLines: 1,
+      style: textStyle14,
+      textInputAction: TextInputAction.search,
+      controller: searchModel.keywordsController,
+      keyboardType: TextInputType.text,
+      onSubmitted: (keywords) {
+        if (keywords.isNullOrBlank) return;
+        searchModel.search(keywords);
+      },
     );
   }
 
-  Widget _buildHeaderTitle(final BuildContext context) {
+  Widget _buildHeaderTitle(final BuildContext context, final ThemeData theme) {
     return Row(
       children: [
+        MaterialButton(
+          minWidth: 36.0,
+          color: theme.backgroundColor,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: circleShape,
+          child: Icon(
+            FluentIcons.chevron_left_24_regular,
+            size: 16.0,
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        sizedBoxW12,
         Expanded(
           child: Text(
-            "Search",
-            style: TextStyle(
-              fontSize: 24.0,
-              fontWeight: FontWeight.bold,
-              height: 1.25,
-            ),
+            "搜索",
+            style: textStyle24B,
           ),
         ),
         Selector<SearchModel, bool>(
@@ -437,16 +429,6 @@ class SearchFragment extends StatelessWidget {
               return CupertinoActivityIndicator(radius: 12.0);
             }
             return sizedBox;
-          },
-        ),
-        const SizedBox(width: 8.0),
-        MaterialButton(
-          padding: EdgeInsets.zero,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          minWidth: 0.0,
-          child: Icon(FluentIcons.dismiss_24_regular),
-          onPressed: () {
-            Navigator.pop(context);
           },
         ),
       ],
@@ -479,7 +461,7 @@ class SearchFragment extends StatelessWidget {
                     theme.accentColor.withOpacity(0.1),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(2.0),
+                borderRadius: borderRadius2,
               ),
             ),
             sizedBoxW4,
@@ -501,9 +483,9 @@ class SearchFragment extends StatelessWidget {
         Widget cover;
         if (value.extendedImageLoadState == LoadState.loading) {
           cover = Container(
-            padding: EdgeInsets.all(28.0),
+            padding: edge28,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: borderRadius8,
             ),
             child: Center(
               child: SpinKitPumpingHeart(
@@ -517,7 +499,7 @@ class SearchFragment extends StatelessWidget {
         } else if (value.extendedImageLoadState == LoadState.failed) {
           cover = Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: borderRadius8,
               image: DecorationImage(
                 image: ExtendedAssetImageProvider("assets/mikan.png"),
                 fit: BoxFit.cover,
@@ -532,7 +514,7 @@ class SearchFragment extends StatelessWidget {
           );
           cover = Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: borderRadius8,
               image: DecorationImage(
                 image: value.imageProvider,
                 fit: BoxFit.cover,
@@ -560,7 +542,7 @@ class SearchFragment extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: [Colors.transparent, Colors.black45],
                       ),
-                      borderRadius: BorderRadius.circular(8.0)),
+                      borderRadius: borderRadius8),
                 ),
               ),
               Positioned(bottom: 8.0, right: 8.0, left: 8.0, child: child)

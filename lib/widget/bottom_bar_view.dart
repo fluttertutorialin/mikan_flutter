@@ -5,6 +5,7 @@ import 'package:extended_image/extended_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mikan_flutter/internal/screen.dart';
+import 'package:mikan_flutter/topvars.dart';
 
 class BarItem {
   IconData? icon;
@@ -62,15 +63,12 @@ class _BottomBarViewState extends State<BottomBarView>
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.only(
-        topRight: Radius.circular(16.0),
-        topLeft: Radius.circular(16.0),
-      ),
+      borderRadius: borderRadius16,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
         child: Container(
           height: widget.height,
-          padding: EdgeInsets.only(bottom: Sz.navBarHeight),
+          padding: EdgeInsets.only(bottom: Screen.navBarHeight),
           decoration: BoxDecoration(
             color: Theme.of(context).backgroundColor.withOpacity(0.72),
           ),

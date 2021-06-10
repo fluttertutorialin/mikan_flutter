@@ -1,7 +1,6 @@
 import 'package:extended_sliver/extended_sliver.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mikan_flutter/internal/delegate.dart';
 import 'package:mikan_flutter/internal/screen.dart';
 import 'package:mikan_flutter/mikan_flutter_routes.dart';
 import 'package:mikan_flutter/model/record_item.dart';
@@ -17,7 +16,7 @@ class ListFragment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final ListModel model = Provider.of<ListModel>(context, listen: false);
+    final model = Provider.of<ListModel>(context, listen: false);
     return Scaffold(
       body: NotificationListener(
         onNotification: (notification) {
@@ -37,7 +36,7 @@ class ListFragment extends StatelessWidget {
             color: theme.accentColor.computeLuminance() < 0.5
                 ? Colors.white
                 : Colors.black,
-            distance: Sz.statusBarHeight + 42.0,
+            distance: Screen.statusBarHeight + 42.0,
           ),
           footer: Indicator.footer(
             context,
@@ -69,9 +68,9 @@ class ListFragment extends StatelessWidget {
         builder: (_, __, ___) {
           final List<RecordItem> records = listModel.records;
           if (records.isEmpty) {
-            return sliverToBoxAdapter;
+            return emptySliverToBoxAdapter;
           }
-          return SliverGrid(
+          return SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final RecordItem record = records[index];
@@ -90,12 +89,12 @@ class ListFragment extends StatelessWidget {
               },
               childCount: records.length,
             ),
-            gridDelegate: const SliverGridDelegateWithMinCrossAxisExtent(
-              minCrossAxisExtent: 360.0,
-              mainAxisExtent: 16.0,
-              crossAxisSpacing: 16.0,
-              mainAxisSpacing: 164.0,
-            ),
+            // gridDelegate: const SliverGridDelegateWithMinCrossAxisExtent(
+            //   minCrossAxisExtent: 360.0,
+            //   mainAxisExtent: 16.0,
+            //   crossAxisSpacing: 16.0,
+            //   mainAxisSpacing: 164.0,
+            // ),
           );
         },
       ),
@@ -116,17 +115,13 @@ class ListFragment extends StatelessWidget {
               borderRadius: scrollHeaderBorderRadius(hasScrolled),
               boxShadow: scrollHeaderBoxShadow(hasScrolled),
             ),
-            padding: edge16Header(),
+            padding: edge16WithStatusBar,
             duration: dur240,
             child: Row(
               children: <Widget>[
                 Text(
                   "最新发布",
-                  style: TextStyle(
-                    fontSize: 24,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: textStyle24B,
                 ),
               ],
             ),

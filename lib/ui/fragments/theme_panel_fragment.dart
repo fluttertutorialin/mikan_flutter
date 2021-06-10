@@ -19,7 +19,7 @@ class ThemePanelFragment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final ThemeModel themeModel = Provider.of(context, listen: false);
+    final themeModel = Provider.of<ThemeModel>(context, listen: false);
     return Container(
       margin: EdgeInsets.only(
         left: 16.0,
@@ -27,7 +27,7 @@ class ThemePanelFragment extends StatelessWidget {
         bottom: 24.0,
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: borderRadius16,
         color: theme.backgroundColor,
       ),
       child: ValueListenableBuilder(
@@ -45,8 +45,8 @@ class ThemePanelFragment extends StatelessWidget {
                     onPressed: () {
                       this._showEditThemePanel(context);
                     },
-                    minWidth: 0,
-                    shape: CircleBorder(),
+                    minWidth: 36.0,
+                    shape: circleShape,
                     color: theme.scaffoldBackgroundColor,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     padding: EdgeInsets.zero,
@@ -112,8 +112,8 @@ class ThemePanelFragment extends StatelessWidget {
                         if (themeItem.id == 1) return "默认主题不可修改".toast();
                         this._showEditThemePanel(context, themeItem: themeItem);
                       },
-                      margin: EdgeInsets.all(8.0),
-                      padding: EdgeInsets.all(0.0),
+                      margin: edge8,
+                      padding: EdgeInsets.zero,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24.0),
                         boxShadow: [
@@ -133,7 +133,7 @@ class ThemePanelFragment extends StatelessWidget {
                     );
             },
             itemCount: themeNum + 1,
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 56.0,
             ),
           );
@@ -149,7 +149,7 @@ class ThemePanelFragment extends StatelessWidget {
     showCupertinoModalBottomSheet(
       context: context,
       expand: false,
-      topRadius: Radius.circular(16.0),
+      topRadius: radius16,
       builder: (context) {
         return ThemeEditFragment(themeItem: themeItem);
       },

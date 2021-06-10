@@ -1,11 +1,7 @@
-import 'dart:ui';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:extended_sliver/extended_sliver.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:mikan_flutter/internal/extension.dart';
@@ -17,27 +13,30 @@ import 'package:mikan_flutter/model/record_item.dart';
 import 'package:mikan_flutter/model/season.dart';
 import 'package:mikan_flutter/model/user.dart';
 import 'package:mikan_flutter/providers/index_model.dart';
-import 'package:mikan_flutter/providers/subscribed_model.dart';
+import 'package:mikan_flutter/providers/op_model.dart';
 import 'package:mikan_flutter/topvars.dart';
 import 'package:mikan_flutter/ui/components/ova_record_item.dart';
 import 'package:mikan_flutter/ui/fragments/bangumi_sliver_grid_fragment.dart';
 import 'package:mikan_flutter/ui/fragments/search_fragment.dart';
 import 'package:mikan_flutter/ui/fragments/select_season_fragment.dart';
 import 'package:mikan_flutter/ui/fragments/settings_fragment.dart';
-import 'package:mikan_flutter/widget/common_widgets.dart';
+import 'package:mikan_flutter/widget/infinite_carousel.dart';
 import 'package:mikan_flutter/widget/tap_scale_container.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
-@immutable
-class IndexFragment extends StatelessWidget {
+class IndexFragment extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => _IndexFragmentState();
+}
+
+class _IndexFragmentState extends State<IndexFragment> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final IndexModel indexModel =
-        Provider.of<IndexModel>(context, listen: false);
+    final indexModel = Provider.of<IndexModel>(context, listen: false);
     return Scaffold(
       body: NotificationListener(
         onNotification: (notification) {
@@ -56,9 +55,7 @@ class IndexFragment extends StatelessWidget {
           shouldRebuild: (pre, next) => pre.ne(next),
           builder: (_, bangumiRows, __) {
             if (bangumiRows.isNullOrEmpty && indexModel.seasonLoading) {
-              return Center(
-                child: CupertinoActivityIndicator(),
-              );
+              return centerLoading;
             }
             return SmartRefresher(
               controller: indexModel.refreshController,
@@ -69,7 +66,7 @@ class IndexFragment extends StatelessWidget {
                 color: theme.accentColor.computeLuminance() < 0.5
                     ? Colors.white
                     : Colors.black,
-                distance: Sz.statusBarHeight + 42.0,
+                distance: Screen.statusBarHeight + 42.0,
               ),
               onRefresh: indexModel.refresh,
               child: CustomScrollView(
@@ -90,11 +87,14 @@ class IndexFragment extends StatelessWidget {
                             padding: edgeHB16T4,
                             bangumis: bangumiRow.bangumis,
                             handleSubscribe: (bangumi, flag) {
-                              context.read<SubscribedModel>().subscribeBangumi(
+                              context.read<OpModel>().subscribeBangumi(
                                 bangumi.id,
                                 bangumi.subscribed,
                                 onSuccess: () {
                                   bangumi.subscribed = !bangumi.subscribed;
+                                  context
+                                      .read<OpModel>()
+                                      .subscribeChanged(flag);
                                 },
                                 onError: (msg) {
                                   "订阅失败：$msg".toast();
@@ -106,7 +106,7 @@ class IndexFragment extends StatelessWidget {
                       );
                     },
                   ),
-                  CommonWidgets.sliverBottomSpace,
+                  sliverSizedBoxH80,
                 ],
               ),
             );
@@ -136,33 +136,36 @@ class IndexFragment extends StatelessWidget {
     ].join("，");
 
     return SliverPinnedToBoxAdapter(
-      child: Container(
-        padding: edgeH16V8,
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                bangumiRow.name,
-                style: textStyle20B,
-              ),
-            ),
-            Tooltip(
-              message: full,
-              child: Text(
-                simple,
-                style: TextStyle(
-                  color: theme.textTheme.subtitle1?.color,
-                  fontSize: 12.0,
-                  height: 1.25,
+      child: Transform.translate(
+        offset: offsetY_1,
+        child: Container(
+          padding: edgeH16V8,
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  bangumiRow.name,
+                  style: textStyle20B,
                 ),
               ),
-            ),
-          ],
+              Tooltip(
+                message: full,
+                child: Text(
+                  simple,
+                  style: TextStyle(
+                    color: theme.textTheme.subtitle1?.color,
+                    fontSize: 14.0,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -174,7 +177,7 @@ class IndexFragment extends StatelessWidget {
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (_, ovas, child) {
         if (ovas.isSafeNotEmpty) return child!;
-        return sliverToBoxAdapter;
+        return emptySliverToBoxAdapter;
       },
       child: SliverToBoxAdapter(
         child: Padding(
@@ -188,6 +191,9 @@ class IndexFragment extends StatelessWidget {
     );
   }
 
+  InfiniteScrollController _infiniteScrollController =
+      InfiniteScrollController();
+
   Widget _buildCarousels(final ThemeData theme) {
     return Selector<IndexModel, List<Carousel>>(
       selector: (_, model) => model.carousels,
@@ -195,69 +201,75 @@ class IndexFragment extends StatelessWidget {
       builder: (context, carousels, __) {
         if (carousels.isNotEmpty)
           return SliverToBoxAdapter(
-            child: CarouselSlider.builder(
-              itemBuilder: (context, index, _) {
-                final carousel = carousels[index];
-                final String currFlag =
-                    "carousel:${carousel.id}:${carousel.cover}";
-                return _buildCarouselsItem(
-                  context,
-                  theme,
-                  currFlag,
-                  carousel,
-                );
-              },
-              itemCount: carousels.length,
-              options: CarouselOptions(
-                height: 180,
-                aspectRatio: 16 / 9,
-                viewportFraction: 0.8,
-                autoPlay: true,
-                enlargeCenterPage: true,
+            child: Container(
+              margin: edgeB16,
+              height: 148.0,
+              child: InfiniteCarousel.builder(
+                itemBuilder: (context, index, realIndex) {
+                  final carousel = carousels[index];
+                  final String currFlag =
+                      "carousel:$index:${carousel.id}:${carousel.cover}";
+                  final currentOffset = 300 * realIndex;
+                  return AnimatedBuilder(
+                    animation: _infiniteScrollController,
+                    builder: (_, __) {
+                      final diff =
+                          (_infiniteScrollController.offset - currentOffset);
+                      final ver = (diff / 36).abs();
+                      var hor = (diff / 72).abs();
+                      if (hor < 8.0) {
+                        hor = 8.0;
+                      } else if (hor > 12.0) {
+                        hor = 12.0;
+                      }
+                      return Hero(
+                        tag: currFlag,
+                        child: TapScaleContainer(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              Routes.bangumi.name,
+                              arguments: Routes.bangumi.d(
+                                heroTag: currFlag,
+                                bangumiId: carousel.id,
+                                cover: carousel.cover,
+                              ),
+                            );
+                          },
+                          margin: EdgeInsets.symmetric(
+                            horizontal: hor,
+                            vertical: ver > 8.0 ? 8.0 : ver,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: borderRadius16,
+                            color: theme.backgroundColor,
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 8,
+                                color: Colors.black.withOpacity(0.08),
+                              )
+                            ],
+                            image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image:
+                                  ExtendedNetworkImageProvider(carousel.cover),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+                controller: _infiniteScrollController,
+                itemExtent: 300.0,
+                itemCount: carousels.length,
+                center: true,
+                velocityFactor: 0.8,
               ),
             ),
           );
-        return sliverToBoxAdapter;
+        return emptySliverToBoxAdapter;
       },
-    );
-  }
-
-  Widget _buildCarouselsItem(
-    final BuildContext context,
-    final ThemeData theme,
-    final String currFlag,
-    final Carousel carousel,
-  ) {
-    return Hero(
-      tag: currFlag,
-      child: TapScaleContainer(
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            Routes.bangumi.name,
-            arguments: Routes.bangumi.d(
-              heroTag: currFlag,
-              bangumiId: carousel.id,
-              cover: carousel.cover,
-            ),
-          );
-        },
-        margin: edgeT16B12,
-        decoration: BoxDecoration(
-          borderRadius: borderRadius16,
-          color: theme.backgroundColor,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 8,
-              color: Colors.black.withOpacity(0.08),
-            )
-          ],
-          image: DecorationImage(
-            fit: BoxFit.cover,
-            image: ExtendedNetworkImageProvider(carousel.cover),
-          ),
-        ),
-      ),
     );
   }
 
@@ -275,7 +287,7 @@ class IndexFragment extends StatelessWidget {
               borderRadius: scrollHeaderBorderRadius(hasScrolled),
               boxShadow: scrollHeaderBoxShadow(hasScrolled),
             ),
-            padding: edge16Header(),
+            padding: edge16WithStatusBar,
             duration: dur240,
             child: Row(
               children: [
@@ -304,18 +316,20 @@ class IndexFragment extends StatelessWidget {
                     _showSearchPanel(context);
                   },
                   child: Icon(FluentIcons.search_24_regular),
-                  minWidth: 0,
+                  minWidth: 48.0,
+                  height: 48.0,
                   padding: edge10,
-                  shape: CircleBorder(),
+                  shape: circleShape,
                 ),
+                sizedBoxW8,
                 MaterialButton(
                   onPressed: () {
                     _showSettingsPanel(context);
                   },
                   child: _buildAvatar(),
-                  minWidth: 0,
-                  padding: EdgeInsets.all(10.0),
-                  shape: CircleBorder(),
+                  minWidth: 48.0,
+                  padding: edge10,
+                  shape: circleShape,
                 ),
               ],
             ),
@@ -340,14 +354,11 @@ class IndexFragment extends StatelessWidget {
                 ? sizedBox
                 : Text(
                     season.title,
-                    style: TextStyle(
-                      fontSize: 24.0,
-                      height: 1.25,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: textStyle24B,
                   );
           },
         ),
+        sizedBoxW8,
         MaterialButton(
           onPressed: () {
             _showYearSeasonBottomSheet(context);
@@ -356,12 +367,13 @@ class IndexFragment extends StatelessWidget {
             FluentIcons.chevron_down_24_regular,
             size: 16.0,
           ),
-          minWidth: 0,
+          minWidth: 36.0,
           color: hasScrolled
               ? theme.scaffoldBackgroundColor
               : theme.backgroundColor,
-          padding: EdgeInsets.all(5.0),
-          shape: CircleBorder(),
+          padding: edge8,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: circleShape,
         ),
       ],
     );
@@ -405,7 +417,7 @@ class IndexFragment extends StatelessWidget {
   Future _showYearSeasonBottomSheet(final BuildContext context) {
     return showCupertinoModalBottomSheet(
       context: context,
-      topRadius: Radius.circular(16.0),
+      topRadius: radius16,
       builder: (_) {
         return SelectSeasonFragment();
       },
@@ -417,16 +429,16 @@ class IndexFragment extends StatelessWidget {
       selector: (_, model) => model.ovas,
       shouldRebuild: (pre, next) => pre.ne(next),
       builder: (context, records, __) {
-        if (records.isNullOrEmpty) return sliverToBoxAdapter;
+        if (records.isNullOrEmpty) return emptySliverToBoxAdapter;
         return SliverToBoxAdapter(
           child: Container(
-            height: 156.0,
-            padding: EdgeInsets.only(bottom: 12.0, top: 12.0),
+            height: 146.0,
+            padding: const EdgeInsets.only(bottom: 12.0, top: 12.0),
             child: ListView.builder(
-              physics: BouncingScrollPhysics(),
+              physics: const BouncingScrollPhysics(),
               itemCount: records.length,
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.only(left: 16.0),
+              padding: const EdgeInsets.only(left: 16.0),
               itemBuilder: (context, index) {
                 final RecordItem record = records[index];
                 return OVARecordItem(
@@ -455,7 +467,7 @@ class IndexFragment extends StatelessWidget {
       expand: true,
       bounce: true,
       enableDrag: false,
-      topRadius: Radius.circular(16.0),
+      topRadius: radius16,
       builder: (_) {
         return SearchFragment();
       },
@@ -465,7 +477,7 @@ class IndexFragment extends StatelessWidget {
   void _showSettingsPanel(final BuildContext context) {
     showCupertinoModalBottomSheet(
       context: context,
-      topRadius: Radius.circular(16.0),
+      topRadius: radius16,
       builder: (_) {
         return SettingsFragment();
       },

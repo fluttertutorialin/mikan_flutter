@@ -1,4 +1,3 @@
-import 'package:extended_image/extended_image.dart';
 import 'package:ff_annotation_route_core/ff_annotation_route_core.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
@@ -6,11 +5,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:mikan_flutter/internal/extension.dart';
-import 'package:mikan_flutter/internal/screen.dart';
 import 'package:mikan_flutter/mikan_flutter_routes.dart';
 import 'package:mikan_flutter/providers/index_model.dart';
 import 'package:mikan_flutter/providers/login_model.dart';
 import 'package:mikan_flutter/providers/subscribed_model.dart';
+import 'package:mikan_flutter/topvars.dart';
 import 'package:provider/provider.dart';
 
 @FFRoute(
@@ -29,45 +28,59 @@ class LoginPage extends StatelessWidget {
       child: ChangeNotifierProvider<LoginModel>(
         create: (_) => LoginModel(),
         child: Builder(builder: (context) {
-          final LoginModel loginModel =
-              Provider.of<LoginModel>(context, listen: false);
+          final loginModel = Provider.of<LoginModel>(context, listen: false);
           return Scaffold(
-            body: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 24.0,
-                  right: 24.0,
-                  top: Sz.statusBarHeight + 36.0,
-                  bottom: 36.0,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      _buildHeader(),
-                      SizedBox(height: 42.0),
-                      _buildUserNameField(theme, loginModel),
-                      SizedBox(height: 16.0),
-                      _buildPasswordField(theme, loginModel),
-                      SizedBox(height: 16.0),
-                      _buildRememberRow(theme, loginModel),
-                      SizedBox(height: 16.0),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, Routes.register);
-                        },
-                        child: Text(
-                          "还没有账号？赶紧来注册一个吧~",
-                          style: TextStyle(color: theme.primaryColor),
-                        ),
+            body: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400.0),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: edgeH24V36WithStatusBar,
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          normalFormHeader,
+                          sizedBoxH42,
+                          _buildUserNameField(theme, loginModel),
+                          sizedBoxH16,
+                          _buildPasswordField(theme, loginModel),
+                          sizedBoxH16,
+                          _buildRememberRow(theme, loginModel),
+                          sizedBoxH16,
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, Routes.register);
+                            },
+                            child: Text("还没有账号？赶紧来注册一个吧~"),
+                          ),
+                          sizedBoxH16,
+                          Row(
+                            children: [
+                              MaterialButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Icon(
+                                  FluentIcons.chevron_left_24_regular,
+                                  size: 16.0,
+                                ),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                minWidth: 0.0,
+                                padding: edge16,
+                                shape: circleShape,
+                                color: theme.backgroundColor,
+                              ),
+                              sizedBoxW12,
+                              Expanded(child: _buildLoginButton(theme)),
+                            ],
+                          ),
+                          sizedBoxH56,
+                        ],
                       ),
-                      SizedBox(height: 16.0),
-                      _buildLoginButton(theme),
-                      SizedBox(
-                        height: 56.0,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -109,7 +122,7 @@ class LoginPage extends StatelessWidget {
                   type: SpinKitWaveType.center,
                   color: iconColor,
                 ),
-              const SizedBox(width: 12.0),
+              sizedBoxW12,
               Text(
                 loading ? "登录中..." : "登录",
                 style: TextStyle(
@@ -118,7 +131,7 @@ class LoginPage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 12.0),
+              sizedBoxW12,
               if (loading)
                 SpinKitWave(
                   size: 20.0,
@@ -152,16 +165,10 @@ class LoginPage extends StatelessWidget {
             );
           },
         ),
-        Expanded(
-            child: Text(
-          "记住密码",
-        )),
+        Expanded(child: Text("记住密码")),
         TextButton(
           onPressed: () {},
-          child: Text(
-            "忘记密码",
-            style: TextStyle(color: theme.primaryColor),
-          ),
+          child: Text("忘记密码"),
         )
       ],
     );
@@ -237,36 +244,6 @@ class LoginPage extends StatelessWidget {
           keyboardType: TextInputType.visiblePassword,
         );
       },
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        ExtendedImage.asset(
-          "assets/mikan.png",
-          width: 72.0,
-        ),
-        SizedBox(width: 24.0),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              "Mikan Project",
-              style: TextStyle(fontSize: 14.0),
-            ),
-            Text(
-              "蜜柑计划",
-              style: TextStyle(
-                fontSize: 32.0,
-                height: 1.25,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        )
-      ],
     );
   }
 }
